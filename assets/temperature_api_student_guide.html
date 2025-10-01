@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Temperature Logging API — Student Guide</title>
+  <style>
+    :root{
+      --bg:#0f172a;        /* slate-900 */
+      --panel:#111827;     /* gray-900 */
+      --text:#e5e7eb;      /* gray-200 */
+      --muted:#9ca3af;     /* gray-400 */
+      --accent:#38bdf8;    /* sky-400 */
+      --ok:#34d399;        /* emerald-400 */
+      --warn:#f59e0b;      /* amber-500 */
+      --err:#f87171;       /* rose-400 */
+      --code:#0b1020;
+      --border:#1f2937;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{padding:28px 20px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(56,189,248,0.08),transparent)}
+    .container{max-width:1100px;margin:0 auto;padding:0 20px}
+    h1{margin:0 0 6px;font-size:28px;letter-spacing:.2px}
+    h2{margin:28px 0 8px;font-size:22px;border-left:4px solid var(--accent);padding-left:10px}
+    h3{margin:22px 0 6px;font-size:18px}
+    p{margin:10px 0;color:var(--text)}
+    .muted{color:var(--muted)}
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin:16px 0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+    .kbd{background:#0b1020;border:1px solid #1f2937;border-radius:8px;padding:2px 8px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    code,pre{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    pre{white-space:pre-wrap;background:var(--code);border:1px solid var(--border);border-radius:10px;padding:12px;margin:10px 0;overflow:auto}
+    .http{display:inline-block;border-radius:999px;padding:2px 10px;font-weight:600;margin-right:8px;border:1px solid var(--border)}
+    .GET{color:var(--ok);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
+    .POST{color:#60a5fa;background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.35)}
+    .PUT{color:var(--warn);background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.35)}
+    .DELETE{color:var(--err);background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.35)}
+    table{width:100%;border-collapse:collapse;margin:10px 0;border:1px solid var(--border)}
+    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+    th{color:var(--muted);font-weight:600;background:#0c1224}
+    .foot{margin:22px 0;color:var(--muted);font-size:14px}
+    .badge{display:inline-block;background:#0b1228;border:1px solid var(--border);border-radius:8px;padding:6px 10px;margin:6px 6px 0 0}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Temperature Logging API — Student Guide</h1>
+      <p class="muted">Use this document to test and consume the Flask API that records temperature and humidity readings and manages sensors.</p>
+      <div class="panel">
+        <strong>Base URL</strong>
+        <pre><code>http://localhost:5000</code></pre>
+        <p class="muted">Replace with your server’s address (e.g., cloud host or internal IP) when deployed.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <h2>Quick Start</h2>
+      <div class="grid">
+        <div>
+          <h3>Health Check</h3>
+          <span class="http GET">GET</span> <code>/api/health</code>
+          <pre><code>curl -s {{BASE}}/api/health
+# → {"status":"ok"}</code></pre>
+        </div>
+        <div>
+          <h3>Common Tools</h3>
+          <p class="muted">You can use <span class="kbd">curl</span>, Postman, or VS Code REST Client.</p>
+        </div>
+      </div>
+      <p class="foot">Note: All request/response bodies are JSON unless otherwise noted.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Authentication</h2>
+      <p>No authentication is required by default. If your instructor enables an API key, include a header such as:</p>
+      <pre><code>X-API-KEY: sensor-site</code></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Resources</h2>
+      <div class="badge">sensors</div>
+      <div class="badge">temperature_log</div>
+    </section>
+
+    <!-- SENSORS -->
+    <section class="panel">
+      <h2>Sensors</h2>
+
+      <h3>List all sensors</h3>
+      <p><span class="http GET">GET</span> <code>/api/sensors</code></p>
+      <pre><code>curl -s {{BASE}}/api/sensors</code></pre>
+      <details>
+        <summary>Response (200)</summary>
+<pre><code>[
+  {
+    "sensor_id": 0,
+    "mac_addr": "xx:xx:xx:xx:xx:xx",
+    "device_id": "00",
+    "device_location": "Mike C office"
+  }
+]</code></pre>
+      </details>
+
+      <h3>Get one sensor</h3>
+      <p><span class="http GET">GET</span> <code>/api/sensors/{sensor_id}</code></p>
+      <pre><code>curl -s {{BASE}}/api/sensors/0</code></pre>
+      <details>
+        <summary>Response (200)</summary>
+<pre><code>{
+  "sensor_id": 0,
+  "mac_addr": "xx:xx:xx:xx:xx:xx",
+  "device_id": "00",
+  "device_location": "Mike C office"
+}</code></pre>
+      </details>
+
+      <h3>Create a sensor</h3>
+      <p><span class="http POST">POST</span> <code>/api/sensors</code></p>
+      <table>
+        <tr><th>Body Fields</th><th>Type</th><th>Required</th><th>Notes</th></tr>
+        <tr><td>sensor_id</td><td>integer</td><td>Yes</td><td>Must be unique (no auto-increment)</td></tr>
+        <tr><td>mac_addr</td><td>string</td><td>Yes</td><td>e.g., <code>aa:bb:cc:dd:ee:ff</code></td></tr>
+        <tr><td>device_id</td><td>string</td><td>Yes</td><td>Free-form device identifier</td></tr>
+        <tr><td>device_location</td><td>string</td><td>Yes</td><td>Human readable room/area</td></tr>
+      </table>
+<pre><code>curl -s -X POST {{BASE}}/api/sensors \
+ -H "Content-Type: application/json" \
+ -d '{
+   "sensor_id": 1,
+   "mac_addr": "aa:bb:cc:dd:ee:ff",
+   "device_id": "01",
+   "device_location": "Lab A"
+ }'</code></pre>
+      <details>
+        <summary>Response (201)</summary>
+<pre><code>{"message":"sensor created","sensor":{...}}</code></pre>
+      </details>
+
+      <h3>Edit a sensor</h3>
+      <p><span class="http PUT">PUT</span> <code>/api/sensors/{sensor_id}</code></p>
+      <table>
+        <tr><th>Editable Fields</th><th>Type</th></tr>
+        <tr><td>mac_addr</td><td>string</td></tr>
+        <tr><td>device_id</td><td>string</td></tr>
+        <tr><td>device_location</td><td>string</td></tr>
+      </table>
+<pre><code>curl -s -X PUT {{BASE}}/api/sensors/1 \
+ -H "Content-Type: application/json" \
+ -d '{"device_location": "Server Room"}'</code></pre>
+      <details>
+        <summary>Response (200)</summary>
+<pre><code>{"message":"sensor updated","sensor":{...}}</code></pre>
+      </details>
+    </section>
+
+    <!-- TEMPERATURE LOGS -->
+    <section class="panel">
+      <h2>Temperature Logs</h2>
+
+      <h3>Create a log entry</h3>
+      <p><span class="http POST">POST</span> <code>/api/logs</code></p>
+      <table>
+        <tr><th>Body Fields</th><th>Type</th><th>Required</th><th>Notes</th></tr>
+        <tr><td>sensor_id</td><td>integer</td><td>Yes</td><td>Must exist in <code>sensors</code></td></tr>
+        <tr><td>temperature_f</td><td>number</td><td>Yes</td><td>Decimal allowed (e.g., 72.50)</td></tr>
+        <tr><td>humidity</td><td>number</td><td>Yes</td><td>Decimal allowed (e.g., 44.30)</td></tr>
+        <tr><td>read_time</td><td>string</td><td>No</td><td>ISO-like: <code>YYYY-MM-DD HH:MM:SS</code>. Defaults to now (UTC).</td></tr>
+      </table>
+<pre><code>curl -s -X POST {{BASE}}/api/logs \
+ -H "Content-Type: application/json" \
+ -d '{
+   "sensor_id": 0,
+   "temperature_f": 72.5,
+   "humidity": 44.3,
+   "read_time": "2025-09-24 13:05:00"
+ }'</code></pre>
+      <details>
+        <summary>Response (201)</summary>
+<pre><code>{"message":"log created","log":{...}}</code></pre>
+      </details>
+
+      <h3>List log entries</h3>
+      <p><span class="http GET">GET</span> <code>/api/logs</code></p>
+      <p class="muted">Query params: <code>limit</code> (max 1000, default 100), <code>offset</code> (default 0)</p>
+<pre><code>curl -s "{{BASE}}/api/logs?limit=50&offset=0"</code></pre>
+      <details>
+        <summary>Response (200)</summary>
+<pre><code>[{ "log_id": 1, "read_time":"2025-09-24 13:05:00", "sensor_id":0, "temperature_f":72.5, "humidity":44.3 }, ...]</code></pre>
+      </details>
+
+      <h3>Get one log entry</h3>
+      <p><span class="http GET">GET</span> <code>/api/logs/{log_id}</code></p>
+<pre><code>curl -s {{BASE}}/api/logs/1</code></pre>
+
+      <h3>Edit a log entry</h3>
+      <p><span class="http PUT">PUT</span> <code>/api/logs/{log_id}</code></p>
+      <table>
+        <tr><th>Editable Fields</th><th>Type</th></tr>
+        <tr><td>read_time</td><td>string (ISO-like)</td></tr>
+        <tr><td>sensor_id</td><td>integer</td></tr>
+        <tr><td>temperature_f</td><td>number</td></tr>
+        <tr><td>humidity</td><td>number</td></tr>
+      </table>
+<pre><code>curl -s -X PUT {{BASE}}/api/logs/1 \
+ -H "Content-Type: application/json" \
+ -d '{"temperature_f": 70.25, "humidity": 40.0}'</code></pre>
+
+      <h3>Delete a log entry</h3>
+      <p><span class="http DELETE">DELETE</span> <code>/api/logs/{log_id}</code></p>
+<pre><code>curl -s -X DELETE {{BASE}}/api/logs/1</code></pre>
+      <details>
+        <summary>Response (200)</summary>
+<pre><code>{"message":"log deleted","log_id":1}</code></pre>
+      </details>
+    </section>
+
+    <section class="panel">
+      <h2>HTTP Status Codes</h2>
+      <table>
+        <tr><th>Code</th><th>Meaning</th></tr>
+        <tr><td>200</td><td>OK — Successful request</td></tr>
+        <tr><td>201</td><td>Created — New resource created</td></tr>
+        <tr><td>400</td><td>Bad Request — Invalid or missing fields</td></tr>
+        <tr><td>404</td><td>Not Found — Resource does not exist</td></tr>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Data Models (for reference)</h2>
+      <div class="grid">
+        <div>
+          <h3>Sensor</h3>
+<pre><code>{
+  "sensor_id": 0,
+  "mac_addr": "xx:xx:xx:xx:xx:xx",
+  "device_id": "00",
+  "device_location": "Mike C office"
+}</code></pre>
+        </div>
+        <div>
+          <h3>TemperatureLog</h3>
+<pre><code>{
+  "log_id": 1,
+  "read_time": "2025-09-24 13:05:00",
+  "sensor_id": 0,
+  "temperature_f": 72.50,
+  "humidity": 44.30
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Troubleshooting</h2>
+      <ul>
+        <li><strong>Foreign key error:</strong> Make sure the <code>sensor_id</code> you use in a log exists in <code>/api/sensors</code>.</li>
+        <li><strong>Invalid time format:</strong> Use <code>YYYY-MM-DD HH:MM:SS</code> or ISO with <code>T</code>, e.g., <code>2025-09-24T13:05:00</code>.</li>
+        <li><strong>Decimals in JSON:</strong> Send numbers (not strings) for <code>temperature_f</code> and <code>humidity</code> when possible.</li>
+      </ul>
+    </section>
+
+    <p class="foot">© <span id="yr"></span> Temperature Logging API — For classroom use.</p>
+  </main>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    // Convenience replace for all {{BASE}} placeholders on page load:
+    const BASE = window.location.origin || 'http://localhost:5000';
+    document.body.innerHTML = document.body.innerHTML.replaceAll('{{BASE}}', BASE);
+  </script>
+</body>
+</html>
